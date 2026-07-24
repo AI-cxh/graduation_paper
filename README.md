@@ -39,4 +39,11 @@ CUDA_VISIBLE_DEVICES=0 .conda/bin/python scripts/run_exp001_smoke.py
 .conda/bin/python scripts/evaluate_exp001.py
 ```
 
+对官方参考答案执行四条件教师强制打分：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
+  scripts/score_exp001_reference_candidates.py
+```
+
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

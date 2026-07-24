@@ -50,6 +50,18 @@ evaluation:
   semantic_accuracy_requires_manual_review: true
   llm_judge_is_not_a_sole_metric: true
 
+candidate_scoring:
+  protocol: "exp001-reference-logprob-v1"
+  candidate: "official_reference_first_line"
+  conditions:
+    - "multimodal_conflict"
+    - "text_only_conflict"
+    - "multimodal_clean"
+    - "text_only_clean"
+  length_normalization: "mean_token_logprob"
+  include_eos: false
+  batch_size: 1
+
 outputs:
   predictions: "outputs/predictions/exp001"
   metrics: "outputs/metrics/exp001"
