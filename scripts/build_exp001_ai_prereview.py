@@ -232,6 +232,9 @@ def main() -> None:
         output_rows.append(
             {
                 "image_id": image_id,
+                "image_path": (
+                    f"annotations/exp001_audit_images/{image_id:08d}.png"
+                ),
                 "condition": condition,
                 "conflict_type": row["conflict_type"],
                 "question": row["question"],
@@ -254,7 +257,11 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(output_rows[0]))
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=list(output_rows[0]),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(output_rows)
     print(f"wrote {len(output_rows)} AI pre-review rows to {args.output}")
