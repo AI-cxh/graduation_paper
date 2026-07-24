@@ -38,6 +38,18 @@ inference:
   max_new_tokens: 32
   prompt_version: "qwen-native-v1"
 
+evaluation:
+  local_protocol: "exp001-local-eval-v1"
+  deterministic_metrics:
+    - "normalized_exact_match"
+    - "token_f1"
+    - "rouge_l_f1"
+    - "reference_contained"
+    - "explicit_target_rejection"
+  paired_test: "exact_mcnemar"
+  semantic_accuracy_requires_manual_review: true
+  llm_judge_is_not_a_sole_metric: true
+
 outputs:
   predictions: "outputs/predictions/exp001"
   metrics: "outputs/metrics/exp001"
