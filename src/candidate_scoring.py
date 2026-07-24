@@ -6,6 +6,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from math import comb, exp
 from statistics import mean, median, pstdev
+import time
 from typing import Any
 
 import torch
@@ -18,6 +19,101 @@ SCORE_CONDITIONS = (
     "multimodal_clean",
     "text_only_clean",
 )
+
+
+def build_chat_message(
+    question: str,
+    with_image: bool,
+) -> list[dict[str, Any]]:
+    """Build the task-native user message used by candidate scoring."""
+
+    content: list[dict[str, str]] = []
+    if with_image:
+        content.append({"type": "image"})
+    content.append({"type": "text", "text": question})
+    return [{"role": "user", "content": content}]
+
+
+def encode_candidate_text(
+    processor: Any,
+    text: str,
+    image: Any | None,
+) -> Any:
+    """Encode one prompt or prompt-candidate sequence without padding."""
+
+    kwargs: dict[str, Any] = {
+        "text": [text],
+        "padding": False,
+        "return_tensors": "pt",
+    }
+    if image is not None:
+        kwargs["images"] = [image]
+    return processor(**kwargs)
+
+
+def score_candidate_record(
+    *,
+    record: Mapping[str, Any],
+    model: Any,
+    processor: Any,
+    device: str,
+    metadata: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Teacher-force one candidate and return token-aligned log probabilities."""
+
+    image = record.get("image")
+    message = build_chat_message(
+        str(record["question"]),
+        with_image=image is not None,
+    )
+    prompt_text = processor.apply_chat_template(
+        message,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+    full_text = f"{prompt_text}{record['candidate_answer']}"
+    prompt_inputs = encode_candidate_text(processor, prompt_text, image)
+    full_inputs = encode_candidate_text(processor, full_text, image)
+    prompt_length = int(prompt_inputs["input_ids"].shape[1])
+    full_length = int(full_inputs["input_ids"].shape[1])
+    if full_length <= prompt_length:
+        raise ValueError(
+            f"Candidate produced no tokens for image_id={record['image_id']}, "
+            f"condition={record['condition']}"
+        )
+    if not torch.equal(
+        prompt_inputs["input_ids"][0],
+        full_inputs["input_ids"][0, :prompt_length],
+    ):
+        raise ValueError(
+            f"Prompt is not a token prefix for image_id={record['image_id']}, "
+            f"condition={record['condition']}"
+        )
+
+    full_inputs = full_inputs.to(device)
+    torch.cuda.reset_peak_memory_stats(device)
+    started = time.perf_counter()
+    with torch.inference_mode():
+        outputs = model(**full_inputs, use_cache=False, return_dict=True)
+    torch.cuda.synchronize(device)
+    elapsed = time.perf_counter() - started
+    stats = candidate_logprob_statistics(
+        outputs.logits,
+        full_inputs["input_ids"],
+        prompt_length,
+    )
+    result = {key: value for key, value in record.items() if key != "image"}
+    result.update(
+        {
+            **stats,
+            **metadata,
+            "prompt_token_count": prompt_length,
+            "full_token_count": full_length,
+            "score_seconds": elapsed,
+            "peak_memory_bytes": int(torch.cuda.max_memory_allocated(device)),
+        }
+    )
+    return result
 
 
 def candidate_logprob_statistics(

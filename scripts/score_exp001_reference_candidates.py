@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -20,7 +19,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from candidate_scoring import (  # noqa: E402
     SCORING_PROTOCOL_VERSION,
     align_scores_with_free_generation,
-    candidate_logprob_statistics,
+    score_candidate_record,
     summarize_reference_scores,
 )
 from mmmc_data import load_arrow_split  # noqa: E402
@@ -133,14 +132,6 @@ def build_score_records(
     return records
 
 
-def build_message(question: str, with_image: bool) -> list[dict[str, Any]]:
-    content: list[dict[str, str]] = []
-    if with_image:
-        content.append({"type": "image"})
-    content.append({"type": "text", "text": question})
-    return [{"role": "user", "content": content}]
-
-
 def existing_keys(path: Path) -> set[tuple[int, str]]:
     if not path.exists():
         return set()
@@ -152,81 +143,6 @@ def existing_keys(path: Path) -> set[tuple[int, str]]:
             if line.strip()
         )
     }
-
-
-def encode(
-    processor: Any,
-    text: str,
-    image: Any | None,
-) -> Any:
-    kwargs: dict[str, Any] = {
-        "text": [text],
-        "padding": False,
-        "return_tensors": "pt",
-    }
-    if image is not None:
-        kwargs["images"] = [image]
-    return processor(**kwargs)
-
-
-def score_record(
-    *,
-    record: dict[str, Any],
-    model: Any,
-    processor: Any,
-    device: str,
-    metadata: dict[str, Any],
-) -> dict[str, Any]:
-    image = record["image"]
-    message = build_message(record["question"], with_image=image is not None)
-    prompt_text = processor.apply_chat_template(
-        message,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-    full_text = f"{prompt_text}{record['candidate_answer']}"
-    prompt_inputs = encode(processor, prompt_text, image)
-    full_inputs = encode(processor, full_text, image)
-    prompt_length = int(prompt_inputs["input_ids"].shape[1])
-    full_length = int(full_inputs["input_ids"].shape[1])
-    if full_length <= prompt_length:
-        raise ValueError(
-            f"Candidate produced no tokens for image_id={record['image_id']}, "
-            f"condition={record['condition']}"
-        )
-    if not torch.equal(
-        prompt_inputs["input_ids"][0],
-        full_inputs["input_ids"][0, :prompt_length],
-    ):
-        raise ValueError(
-            f"Prompt is not a token prefix for image_id={record['image_id']}, "
-            f"condition={record['condition']}"
-        )
-
-    full_inputs = full_inputs.to(device)
-    torch.cuda.reset_peak_memory_stats(device)
-    started = time.perf_counter()
-    with torch.inference_mode():
-        outputs = model(**full_inputs, use_cache=False, return_dict=True)
-    torch.cuda.synchronize(device)
-    elapsed = time.perf_counter() - started
-    stats = candidate_logprob_statistics(
-        outputs.logits,
-        full_inputs["input_ids"],
-        prompt_length,
-    )
-    result = {key: value for key, value in record.items() if key != "image"}
-    result.update(
-        {
-            **stats,
-            **metadata,
-            "prompt_token_count": prompt_length,
-            "full_token_count": full_length,
-            "score_seconds": elapsed,
-            "peak_memory_bytes": int(torch.cuda.max_memory_allocated(device)),
-        }
-    )
-    return result
 
 
 def write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
@@ -311,7 +227,7 @@ def main() -> None:
                 key = (int(record["image_id"]), str(record["condition"]))
                 if key in completed:
                     continue
-                result = score_record(
+                result = score_candidate_record(
                     record=record,
                     model=model,
                     processor=processor,

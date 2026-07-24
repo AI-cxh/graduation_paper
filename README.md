@@ -46,4 +46,17 @@ CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
   scripts/score_exp001_reference_candidates.py
 ```
 
+校验并汇总人工语义复核进度（标签未填完时不会伪造指标）：
+
+```bash
+.conda/bin/python scripts/summarize_exp001_semantic_review.py
+```
+
+运行 EXP-002 轻度图像扰动稳定性诊断：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
+  scripts/run_exp002_perturbation_reliability.py
+```
+
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

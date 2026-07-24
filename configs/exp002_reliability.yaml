@@ -1,0 +1,54 @@
+experiment:
+  id: "EXP-002"
+  name: "Mild-perturbation stability reliability diagnostics"
+  seed: 20260724
+
+dataset:
+  repository: "ustc-zhangzm/MMMC"
+  revision: "0bdbffbb35bf1a2569468fd939a5f70290442e55"
+  sample_manifest: "data/manifests/exp001_sample_ids.jsonl"
+  smoke_pair_count: 50
+
+model:
+  repository: "Qwen/Qwen2.5-VL-3B-Instruct"
+  revision: "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  dtype: "bfloat16"
+  attention: "sdpa"
+  device: "cuda:0"
+
+vision:
+  min_pixels: 200704
+  max_pixels: 802816
+  processor_use_fast: false
+
+inference:
+  tokenizer_padding_side: "left"
+  batch_size: 1
+
+reliability:
+  protocol: "exp002-perturbation-stability-v1"
+  contribution:
+    statistic: "reference_candidate_mean_token_logprob"
+    contrast: "multimodal_minus_text_only"
+  perturbations:
+    - name: "jpeg_q75"
+      parameters:
+        quality: 75
+        chroma_subsampling: 2
+    - name: "gaussian_blur_r1"
+      parameters:
+        radius: 1.0
+  variants:
+    - "identity"
+    - "jpeg_q75"
+    - "gaussian_blur_r1"
+  reliability_features:
+    - "population_std_visual_delta"
+    - "minimum_visual_delta"
+    - "worst_drop_from_identity"
+    - "positive_variant_fraction"
+    - "identity_sign_consistency_fraction"
+  interpretation:
+    semantic_accuracy: false
+    calibrated_probability: false
+    rule_proxy_only_until_human_review: true
