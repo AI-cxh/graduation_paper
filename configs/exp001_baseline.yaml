@@ -25,12 +25,15 @@ model:
 vision:
   min_pixels: 200704  # 256 * 28 * 28
   max_pixels: 802816  # 1024 * 28 * 28
+  processor_use_fast: false
 
 inference:
   conditions:
     - "multimodal_conflict"
     - "text_only_conflict"
     - "multimodal_clean"
+  batch_size: 1
+  tokenizer_padding_side: "left"
   do_sample: false
   max_new_tokens: 32
   prompt_version: "qwen-native-v1"

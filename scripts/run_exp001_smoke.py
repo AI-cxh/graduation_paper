@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
         default=PROJECT_ROOT
         / "outputs/predictions/exp001/qwen2_5_vl_3b_smoke.jsonl",
     )
-    parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--batch-size", type=int)
     parser.add_argument("--max-pairs", type=int)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--dry-run", action="store_true")
@@ -150,7 +150,7 @@ def run_generation(
     generation_config: dict[str, Any],
     output_path: Path,
     completed: set[tuple[int, str]],
-    model_metadata: dict[str, str],
+    model_metadata: dict[str, Any],
 ) -> None:
     records = [
         record
@@ -239,6 +239,11 @@ def run_generation(
 def main() -> None:
     args = parse_args()
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
+    batch_size = (
+        int(args.batch_size)
+        if args.batch_size is not None
+        else int(config["inference"]["batch_size"])
+    )
     manifest = load_smoke_manifest(args.manifest, args.max_pairs)
     dataset = load_arrow_split(args.split_dir)
     by_condition = condition_records(manifest, dataset)
@@ -282,14 +287,18 @@ def main() -> None:
         args.model_path,
         min_pixels=int(config["vision"]["min_pixels"]),
         max_pixels=int(config["vision"]["max_pixels"]),
+        use_fast=bool(config["vision"]["processor_use_fast"]),
         local_files_only=True,
     )
+    processor.tokenizer.padding_side = config["inference"]["tokenizer_padding_side"]
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         args.model_path,
         torch_dtype=torch.bfloat16,
         attn_implementation=config["model"]["attention"],
         local_files_only=True,
     ).to(args.device)
+    if not bool(config["inference"]["do_sample"]):
+        model.generation_config.temperature = None
     model.eval()
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -302,13 +311,18 @@ def main() -> None:
         "device": args.device,
         "dtype": config["model"]["dtype"],
         "attention": config["model"]["attention"],
+        "batch_size": batch_size,
+        "processor_use_fast": bool(config["vision"]["processor_use_fast"]),
+        "tokenizer_padding_side": config["inference"]["tokenizer_padding_side"],
+        "vision_min_pixels": int(config["vision"]["min_pixels"]),
+        "vision_max_pixels": int(config["vision"]["max_pixels"]),
     }
     for condition in config["inference"]["conditions"]:
         run_generation(
             model=model,
             processor=processor,
             records=by_condition[condition],
-            batch_size=args.batch_size,
+            batch_size=batch_size,
             device=args.device,
             generation_config=config["inference"],
             output_path=args.output,
@@ -320,4 +334,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

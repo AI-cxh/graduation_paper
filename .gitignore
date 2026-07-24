@@ -34,6 +34,7 @@ data/processed/*
 !data/processed/.gitkeep
 
 # Experiment outputs
+logs/
 outputs/logs/*
 !outputs/logs/.gitkeep
 outputs/predictions/*
