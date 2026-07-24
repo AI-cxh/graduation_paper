@@ -1,0 +1,37 @@
+{
+  "experiment_id": "EXP-001",
+  "seed": 20260724,
+  "dataset_revision": "0bdbffbb35bf1a2569468fd939a5f70290442e55",
+  "dataset_rows": 4000,
+  "population_pairs": 2000,
+  "population_conflict_types": {
+    "attribute": 318,
+    "object": 1311,
+    "relation": 371
+  },
+  "baseline_pairs": 500,
+  "baseline_rows": 1000,
+  "baseline_conflict_types": {
+    "attribute": 79,
+    "object": 328,
+    "relation": 93
+  },
+  "audit_pairs": 200,
+  "audit_rows": 400,
+  "audit_conflict_types": {
+    "attribute": 32,
+    "object": 131,
+    "relation": 37
+  },
+  "smoke_pairs": 50,
+  "smoke_rows": 100,
+  "smoke_conflict_types": {
+    "attribute": 8,
+    "object": 33,
+    "relation": 9
+  },
+  "nested": {
+    "audit_subset_of_baseline": true,
+    "smoke_subset_of_audit": true
+  }
+}

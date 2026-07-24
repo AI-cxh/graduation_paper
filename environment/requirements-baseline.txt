@@ -1,0 +1,28 @@
+# EXP-001 pip dependencies.
+#
+# The local environment was created by cloning the server's working
+# `llama-factory` Conda environment in offline mode, then adding the two
+# packages marked below. Exact installed versions are recorded here so that
+# the baseline is not silently affected by future package releases.
+#
+# Python: 3.11.13
+# GPU stack (install separately from the PyTorch cu128 wheel index):
+#   torch==2.8.0+cu128
+#   torchvision==0.23.0+cu128
+
+transformers==4.55.0
+accelerate==1.7.0
+datasets==3.6.0
+huggingface-hub==0.34.4
+jsonlines==4.0.0
+pandas==2.3.2
+pillow==11.3.0
+pyarrow==21.0.0
+pyyaml==6.0.2
+qwen-vl-utils==0.0.14  # added for this project
+scikit-learn==1.7.1
+tqdm==4.67.1
+
+# Development and validation
+pytest==8.3.5  # added for this project
+ruff==0.12.12

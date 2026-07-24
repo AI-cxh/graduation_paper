@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.venv/
+.conda/
+
+# IDE and system files
+.idea/
+.vscode/
+.DS_Store
+
+# Model weights and caches
+models/*
+!models/README.md
+.cache/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# External repositories are version-locked separately
+external/*
+!external/README.md
+
+# Raw and generated data
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Experiment outputs
+outputs/logs/*
+!outputs/logs/.gitkeep
+outputs/predictions/*
+!outputs/predictions/.gitkeep
+outputs/metrics/*
+!outputs/metrics/.gitkeep
+
+# Generated audit images (the CSV and instructions remain versioned)
+annotations/exp001_audit_images/
+
+# Secrets and local configuration
+.env
+*.local
