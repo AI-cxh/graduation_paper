@@ -1,0 +1,50 @@
+experiment:
+  id: "EXP-004"
+  name: "Contribution-reliability decoupled selective-intervention Go/No-Go"
+  seed: 20260725
+
+input:
+  utility_records: >-
+    outputs/metrics/exp003/qwen2_5_vl_3b_intervention_utility.jsonl
+  expected_pair_count: 43
+
+target:
+  name: "intervention_only_rule_proxy_success"
+  positive_definition: >-
+    premise-verification intervention explicitly rejects the unsupported
+    conflict premise while the native prompt does not
+  native_utility_field: "baseline_conflict_rejection_proxy"
+  intervention_utility_field: "intervention_conflict_rejection_proxy"
+  semantic_accuracy_claim: false
+
+feature_sets:
+  contribution_only:
+    - "conflict_identity_visual_delta"
+  reliability_only:
+    - "conflict_population_std_visual_delta"
+    - "conflict_worst_drop_from_identity"
+  contribution_plus_reliability:
+    - "conflict_identity_visual_delta"
+    - "conflict_population_std_visual_delta"
+    - "conflict_worst_drop_from_identity"
+
+validation:
+  protocol: "repeated-nested-stratified-cv-v1"
+  outer_folds: 5
+  repeats: 20
+  inner_folds: 3
+  logistic_c_grid: [0.01, 0.1, 1.0, 10.0, 100.0]
+  class_weight: "balanced"
+  threshold_objective: "training-fold policy utility"
+  bootstrap_resamples: 5000
+
+go_no_go:
+  primary_feature_set: "contribution_plus_reliability"
+  comparator_feature_set: "contribution_only"
+  minimum_mean_auroc_gain: 0.05
+  minimum_mean_policy_gain_over_always_intervention: 0.0
+  minimum_repeat_auroc_win_fraction: 0.60
+  interpretation: >-
+    Passing is only a small-sample conditional Go for expanding the semantic
+    audit and held-out evaluation. It is not evidence of a deployable selector.
+
