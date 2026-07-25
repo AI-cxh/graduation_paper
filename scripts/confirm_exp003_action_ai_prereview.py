@@ -14,6 +14,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from action_semantic_review import (  # noqa: E402
     confirm_action_prereview_by_confidence,
+    confirm_action_prereview_by_image_id,
 )
 
 
@@ -30,6 +31,12 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         default=["low", "medium"],
     )
+    parser.add_argument(
+        "--image-id",
+        nargs="+",
+        type=int,
+        help="Accept only this exact image-ID whitelist.",
+    )
     parser.add_argument("--note", required=True)
     return parser.parse_args()
 
@@ -40,11 +47,18 @@ def main() -> None:
         reader = csv.DictReader(handle)
         fields = list(reader.fieldnames or [])
         records = list(reader)
-    updated, changed = confirm_action_prereview_by_confidence(
-        records,
-        set(args.confidence),
-        args.note,
-    )
+    if args.image_id:
+        updated, changed = confirm_action_prereview_by_image_id(
+            records,
+            set(args.image_id),
+            args.note,
+        )
+    else:
+        updated, changed = confirm_action_prereview_by_confidence(
+            records,
+            set(args.confidence),
+            args.note,
+        )
     with args.review_csv.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
@@ -60,4 +74,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

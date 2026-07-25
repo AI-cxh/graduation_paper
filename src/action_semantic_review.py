@@ -320,6 +320,37 @@ def confirm_action_prereview_by_confidence(
     return normalized, changed
 
 
+def confirm_action_prereview_by_image_id(
+    records: Iterable[Mapping[str, Any]],
+    image_ids: set[int],
+    note: str,
+) -> tuple[list[dict[str, Any]], int]:
+    """Accept an exact, explicitly reviewed image-ID whitelist."""
+
+    if not image_ids:
+        raise ValueError("Image-ID confirmation set is empty")
+    normalized = validate_action_review_records(records)
+    available = {int(record["image_id"]) for record in normalized}
+    missing = image_ids - available
+    if missing:
+        raise ValueError(f"Unknown image IDs: {sorted(missing)}")
+    changed = 0
+    for record in normalized:
+        if int(record["image_id"]) not in image_ids:
+            continue
+        confirmation = _label(record, "human_confirmation")
+        if confirmation == "edit":
+            raise ValueError("Cannot overwrite an existing human edit")
+        if not confirmation:
+            if not all(_label(record, field) for field in AI_FIELDS):
+                raise ValueError("Cannot accept an incomplete AI pre-review")
+            record["human_confirmation"] = "accept"
+            record["human_notes"] = note
+            changed += 1
+    validate_action_review_records(normalized)
+    return normalized, changed
+
+
 def _semantic_rates(
     resolved: Sequence[Mapping[str, str]],
 ) -> dict[str, Any]:

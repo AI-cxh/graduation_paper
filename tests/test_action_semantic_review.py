@@ -11,6 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from action_semantic_review import (  # noqa: E402
     confirm_action_prereview_by_confidence,
+    confirm_action_prereview_by_image_id,
     infer_action_effect,
     infer_overall_action,
     summarize_action_semantic_review,
@@ -147,3 +148,25 @@ def test_confirmation_only_accepts_selected_confidence() -> None:
     assert updated[0]["human_confirmation"] == ""
     assert updated[1]["human_confirmation"] == "accept"
     assert updated[1]["human_notes"] == "User reviewed this row."
+
+
+def test_confirmation_by_image_id_uses_exact_whitelist() -> None:
+    rows = [_row(1, prefix="ai"), _row(2, prefix="ai"), _row(3, prefix="ai")]
+    updated, changed = confirm_action_prereview_by_image_id(
+        rows,
+        {1, 3},
+        "User reviewed the selected IDs.",
+    )
+    assert changed == 2
+    assert [
+        row["human_confirmation"] for row in updated
+    ] == ["accept", "", "accept"]
+
+
+def test_confirmation_by_image_id_rejects_unknown_id() -> None:
+    with pytest.raises(ValueError, match="Unknown image IDs"):
+        confirm_action_prereview_by_image_id(
+            [_row(1, prefix="ai")],
+            {2},
+            "Should fail.",
+        )
