@@ -73,4 +73,12 @@ CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
   scripts/run_exp002_perturbation_reliability.py
 ```
 
+运行并评估 EXP-003 前提核验干预：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
+  scripts/run_exp003_intervention_smoke.py
+.conda/bin/python scripts/evaluate_exp003_intervention.py
+```
+
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

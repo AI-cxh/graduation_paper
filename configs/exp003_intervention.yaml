@@ -1,0 +1,44 @@
+experiment:
+  id: "EXP-003"
+  name: "Premise-verification intervention utility smoke test"
+  seed: 20260724
+
+dataset:
+  repository: "ustc-zhangzm/MMMC"
+  revision: "0bdbffbb35bf1a2569468fd939a5f70290442e55"
+  sample_manifest: "data/manifests/exp001_sample_ids.jsonl"
+  exclude_confirmed_dataset_validity_issues: true
+
+model:
+  repository: "Qwen/Qwen2.5-VL-3B-Instruct"
+  revision: "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  dtype: "bfloat16"
+  attention: "sdpa"
+  device: "cuda:0"
+
+vision:
+  min_pixels: 200704
+  max_pixels: 802816
+  processor_use_fast: false
+
+inference:
+  batch_size: 1
+  tokenizer_padding_side: "left"
+  do_sample: false
+  max_new_tokens: 32
+
+intervention:
+  protocol: "exp003-premise-verification-v1"
+  action: "premise_verification"
+  template: >-
+    Check the image before answering. If the question assumes an object,
+    attribute, or relation that the image does not support, explicitly say so
+    and do not guess. Otherwise answer directly.
+  comparison_action: "native_prompt"
+  conditions:
+    - "multimodal_conflict"
+    - "multimodal_clean"
+  interpretation:
+    rule_rejection_is_semantic_accuracy: false
+    clean_lexical_metrics_are_semantic_accuracy: false
+    no_selector_training_in_this_stage: true
