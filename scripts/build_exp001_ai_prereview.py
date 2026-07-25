@@ -134,6 +134,7 @@ MM_CUSTOM_NOTES = {
     2403489: "窗外有低矮山丘，mountain与hill边界主观，不能稳定判定冲突前提。",
     2410888: "图中虽无训练者，但看到马后回答horse trainer在常识问法下合理，官方参考的可答性存疑。",
 }
+DATASET_VALIDITY_IDS = set(MM_CUSTOM_NOTES)
 
 CLEAN_CUSTOM_NOTES = {
     2399942: "未回答dock，列举beach/road/parking多个互斥地点。",
@@ -161,6 +162,11 @@ def parse_args() -> argparse.Namespace:
         "--output",
         type=Path,
         default=PROJECT_ROOT / "annotations/exp001_smoke_ai_prereview.csv",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite an output containing human confirmations.",
     )
     return parser.parse_args()
 
@@ -245,6 +251,16 @@ def main() -> None:
                 "ai_semantic_correct": semantic,
                 "ai_stance": stance,
                 "ai_confidence": confidence,
+                "ai_issue_type": (
+                    "dataset_validity"
+                    if condition == "multimodal_conflict"
+                    and image_id in DATASET_VALIDITY_IDS
+                    else (
+                        "answer_ambiguity"
+                        if semantic == "uncertain"
+                        else ""
+                    )
+                ),
                 "ai_notes": notes,
                 "ai_reviewer": AI_REVIEWER,
                 "protocol": PROTOCOL,
@@ -255,6 +271,14 @@ def main() -> None:
             }
         )
 
+    if args.output.is_file() and not args.force:
+        with args.output.open(encoding="utf-8", newline="") as handle:
+            existing = list(csv.DictReader(handle))
+        if any(row.get("human_confirmation", "").strip() for row in existing):
+            raise ValueError(
+                "Output contains human confirmations; use --force only if "
+                "discarding them is intentional"
+            )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(

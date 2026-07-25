@@ -52,6 +52,20 @@ CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
 .conda/bin/python scripts/summarize_exp001_semantic_review.py
 ```
 
+将用户明确确认的 AI 预复核行同步到正式复核表：
+
+```bash
+.conda/bin/python scripts/confirm_exp001_ai_prereview.py
+.conda/bin/python scripts/merge_exp001_confirmed_review.py
+.conda/bin/python scripts/summarize_exp001_semantic_review.py
+```
+
+按已确认的数据有效性问题执行排除敏感性分析：
+
+```bash
+.conda/bin/python scripts/analyze_confirmed_validity_sensitivity.py
+```
+
 运行 EXP-002 轻度图像扰动稳定性诊断：
 
 ```bash
