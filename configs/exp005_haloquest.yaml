@@ -1,0 +1,58 @@
+experiment:
+  id: "EXP-005"
+  name: "HaloQuest false-premise native versus premise-verification baseline"
+  seed: 20260726
+
+dataset:
+  repository: "google/haloquest"
+  revision: "2f643ebb77aeae40f4c5323db38f99f0dc257cf5"
+  protocol: "haloquest-official-false-premise-eval-v1"
+  manifest: "data/manifests/haloquest_false_premise_eval.jsonl"
+  official_row_count: 304
+  expected_available_count: 287
+  inclusion:
+    split: "eval"
+    hallucination_type: "false premises"
+    download_status: "available"
+  exclusion_rule: "download_status != available"
+
+model:
+  repository: "Qwen/Qwen2.5-VL-3B-Instruct"
+  revision: "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  dtype: "bfloat16"
+  attention: "sdpa"
+  device: "cuda:3"
+
+vision:
+  min_pixels: 200704
+  max_pixels: 802816
+  processor_use_fast: false
+
+inference:
+  actions:
+    - "native_prompt"
+    - "premise_verification"
+  batch_size: 1
+  tokenizer_padding_side: "left"
+  do_sample: false
+  max_new_tokens: 64
+
+intervention:
+  protocol: "exp003-premise-verification-v1"
+  template: >-
+    Check the image before answering. If the question assumes an object,
+    attribute, or relation that the image does not support, explicitly say so
+    and do not guess. Otherwise answer directly.
+
+evaluation:
+  official_protocol: "haloquest-gemini-autoeval"
+  official_judge_available: false
+  official_judge_reason: "GEMINI_API_KEY and GOOGLE_API_KEY are unset"
+  local_protocol: "exp005-high-confidence-false-premise-eval-v1"
+  ambiguous_policy: "exclude_from_primary_metric_and_report_coverage"
+  do_not_call_string_proxy_semantic_accuracy: true
+
+outputs:
+  predictions: "outputs/predictions/exp005/qwen2_5_vl_3b_native_vs_verification.jsonl"
+  metrics: "outputs/metrics/exp005"
+

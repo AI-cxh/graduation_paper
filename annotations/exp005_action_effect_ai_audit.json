@@ -1,0 +1,41 @@
+{
+  "protocol": "exp005-action-effect-ai-audit-v1",
+  "created_at": "2026-07-26",
+  "reviewer_type": "Codex AI semantic audit",
+  "human_annotation_claim": false,
+  "source": "outputs/metrics/exp005/qwen2_5_vl_3b_action_utility.jsonl",
+  "scope_rule": "Audit all 70 proxy-discordant pairs and all 23 proxy-uncertain pairs.",
+  "semantic_rule": "Compare both responses with the official HaloQuest reference. A response that merely says information is unavailable or an object is not visible is not accepted when the reference says the object is absent. Unsupported extra claims that change the main answer make the effect uncertain.",
+  "effect_groups": {
+    "helps": [
+      1, 4, 13, 19, 24, 27, 48, 57, 58, 60, 63, 69, 70, 72, 75, 76,
+      111, 115, 117, 120, 137, 149, 151, 155, 163, 164, 165, 176, 192,
+      200, 210, 214, 218, 221, 223, 225, 230, 231, 241, 250, 251, 256,
+      266, 289, 379, 389, 397, 402, 417, 434, 439, 448, 450, 458, 459,
+      461, 469, 481, 483, 488, 493, 497
+    ],
+    "harms": [79, 118, 222, 387],
+    "tie": [
+      16, 22, 28, 45, 62, 65, 66, 68, 77, 119, 122, 132, 144, 198,
+      201, 204, 209, 211, 228, 246, 257, 403, 431, 435, 467
+    ],
+    "uncertain": [212, 404]
+  },
+  "medium_confidence_ids": [118, 212, 222, 404],
+  "proxy_tie_stratified_audit": {
+    "sampling_rule": "20 evenly spaced rows over the 194 proxy-tie pairs after sorting by HaloQuest ID.",
+    "sample_ids": [
+      2, 15, 33, 43, 61, 114, 133, 152, 169, 183,
+      213, 236, 252, 265, 377, 399, 427, 456, 473, 506
+    ],
+    "same_action_effect_count": 20,
+    "different_action_effect_count": 0,
+    "note": "Some pairs are jointly wrong, but no sampled pair provides a clear action-direction reversal."
+  },
+  "limitations": [
+    "This is an AI semantic audit, not human annotation and not official HaloQuest Auto-Eval.",
+    "All proxy-discordant and proxy-uncertain pairs were reviewed, but only a stratified 20/194 sample of proxy-tie pairs was reviewed.",
+    "The audit compares text with the official reference and does not re-inspect every source image."
+  ]
+}
+

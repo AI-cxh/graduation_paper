@@ -1,4 +1,4 @@
-lock_date: "2026-07-24"
+lock_date: "2026-07-26"
 
 mmmc_code:
   name: "Robust Multimodal Large Language Models Against Modality Conflict"
@@ -25,10 +25,30 @@ qwen_dev_model:
   local_path: "models/Qwen2.5-VL-3B-Instruct"
   intended_use: "Non-commercial academic research"
 
+haloquest_code_and_metadata:
+  name: "HaloQuest: A Visual Hallucination Dataset for Advancing Multimodal Reasoning"
+  repository: "https://github.com/google/haloquest"
+  commit: "2f643ebb77aeae40f4c5323db38f99f0dc257cf5"
+  metadata_file: "haloquest-eval.csv"
+  local_path: "data/raw/haloquest"
+  software_license: "Apache-2.0"
+  materials_license: "CC BY 4.0"
+  note: "The official repository is archived but contains train/eval metadata and Auto-Eval loading examples. Individual source-image licenses must still be checked."
+
+haloquest_huggingface_mirror:
+  repository: "MM-Hallu/HaloQuest"
+  url: "https://huggingface.co/datasets/MM-Hallu/HaloQuest"
+  revision: "8667e0f9f33c72429c2ec5bf1945f77befdb20bb"
+  intended_use: "Fallback for image availability; official GitHub metadata remains authoritative."
+
 papers:
   mmmc:
     title: "Robust Multimodal Large Language Models Against Modality Conflict"
     venue: "ICML 2025"
     proceedings: "https://proceedings.mlr.press/v267/zhang25dq.html"
     openreview: "https://openreview.net/forum?id=SP43jVv7fJ"
+  haloquest:
+    title: "HaloQuest: A Visual Hallucination Dataset for Advancing Multimodal Reasoning"
+    venue: "ECCV 2024"
+    arxiv: "https://arxiv.org/abs/2407.15680"
 

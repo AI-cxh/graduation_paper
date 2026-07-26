@@ -4,9 +4,9 @@
 
 ## 当前阶段
 
-执行一周 Go/No-Go 验证。第一项正式实验为 `EXP-001`：在 MMMC 分层子集上运行图文冲突、仅冲突文本和匹配干净图文三种条件，确认图文冲突下的模态跟随差异是否真实且可重复。
+已完成首轮 Go/No-Go 和公开数据复核。当前结论是：课题问题可做，但现有轻量选择器尚不能超过固定干预。下一阶段扩大公开的冲突—正常动作效用数据，并重新验证贡献、可靠性与干预净收益的关系。
 
-当前已完成 Qwen2.5-VL-3B-Instruct 的 50 配对推理冒烟测试，并建立本地可复现的词级指标、显式前提拒绝规则、配对转移统计和人工语义复核表。规则代理指标不等同于语义准确率。
+当前已完成 Qwen2.5-VL-3B-Instruct 的 MMMC 50配对冒烟测试，以及 HaloQuest 287条 false-premise 样本的原生/前提核验两动作比较。规则代理指标不等同于语义准确率，Codex AI审核也不称作人工标注或官方 HaloQuest Auto-Eval。
 
 ## 目录
 
@@ -79,6 +79,16 @@ CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
 CUDA_VISIBLE_DEVICES=0 .conda/bin/python \
   scripts/run_exp003_intervention_smoke.py
 .conda/bin/python scripts/evaluate_exp003_intervention.py
+```
+
+准备、运行并评估 EXP-005 HaloQuest 公开数据基线：
+
+```bash
+.conda/bin/python scripts/prepare_haloquest_eval.py
+CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
+  scripts/run_exp005_haloquest_baseline.py --device cuda:0
+.conda/bin/python scripts/evaluate_exp005_haloquest.py
+.conda/bin/python scripts/summarize_exp005_ai_audit.py
 ```
 
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

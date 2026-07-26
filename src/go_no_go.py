@@ -33,6 +33,9 @@ class SelectorData:
 def prepare_selector_data(
     records: Sequence[Mapping[str, Any]],
     feature_sets: Mapping[str, Sequence[str]],
+    *,
+    native_utility_field: str = "baseline_conflict_rejection_proxy",
+    intervention_utility_field: str = "intervention_conflict_rejection_proxy",
 ) -> SelectorData:
     """Validate utility records and create aligned model arrays."""
 
@@ -42,12 +45,12 @@ def prepare_selector_data(
     if len(set(image_ids.tolist())) != len(image_ids):
         raise ValueError("Duplicate image_id in utility records")
     native = np.asarray(
-        [bool(record["baseline_conflict_rejection_proxy"]) for record in records],
+        [bool(record[native_utility_field]) for record in records],
         dtype=float,
     )
     intervention = np.asarray(
         [
-            bool(record["intervention_conflict_rejection_proxy"])
+            bool(record[intervention_utility_field])
             for record in records
         ],
         dtype=float,
@@ -464,6 +467,12 @@ def run_go_no_go(
     minimum_mean_auroc_gain: float,
     minimum_mean_policy_gain_over_always_intervention: float,
     minimum_repeat_auroc_win_fraction: float,
+    target_name: str = "intervention_only_rule_proxy_success",
+    protocol: str = "exp004-repeated-nested-stratified-cv-v1",
+    scope: str | None = None,
+    oracle_reference_name: str = "oracle_rule_proxy_utility",
+    native_utility_output_name: str = "native_rule_proxy_utility",
+    intervention_utility_output_name: str = "intervention_rule_proxy_utility",
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Evaluate all feature sets and apply predeclared conditional-Go criteria."""
 
@@ -648,11 +657,9 @@ def run_go_no_go(
         record: dict[str, Any] = {
             "image_id": int(image_id),
             "conflict_type": data.conflict_types[index],
-            "intervention_only_rule_proxy_success": bool(data.target[index]),
-            "native_rule_proxy_utility": int(data.native_utility[index]),
-            "intervention_rule_proxy_utility": int(
-                data.intervention_utility[index]
-            ),
+            target_name: bool(data.target[index]),
+            native_utility_output_name: int(data.native_utility[index]),
+            intervention_utility_output_name: int(data.intervention_utility[index]),
         }
         for name in names:
             record[name] = {
@@ -669,15 +676,18 @@ def run_go_no_go(
         prediction_records.append(record)
 
     oracle = np.maximum(data.native_utility, data.intervention_utility)
+    default_scope = (
+        "Exploratory small-sample evaluation using an automatic explicit-"
+        "rejection proxy. Bootstrap intervals are descriptive and do not "
+        "remove uncertainty from proxy-label error or repeated-CV dependence."
+    )
     summary = {
-        "protocol": "exp004-repeated-nested-stratified-cv-v1",
-        "scope": (
-            "Exploratory small-sample evaluation using an automatic explicit-"
-            "rejection proxy. Bootstrap intervals are descriptive and do not "
-            "remove uncertainty from proxy-label error or repeated-CV dependence."
-        ),
+        "protocol": protocol,
+        "scope": scope or default_scope,
         "sample": {
             "count": len(data.target),
+            "target_name": target_name,
+            "positive_target_count": int(data.target.sum()),
             "positive_intervention_only_count": int(data.target.sum()),
             "negative_count": int((~data.target).sum()),
             "native_only_harm_count": int(
@@ -690,7 +700,7 @@ def run_go_no_go(
         "policy_references": {
             "always_native_utility": float(data.native_utility.mean()),
             "always_intervention_utility": always_intervention,
-            "oracle_rule_proxy_utility": float(oracle.mean()),
+            oracle_reference_name: float(oracle.mean()),
         },
         "validation": {
             "outer_folds": outer_folds,

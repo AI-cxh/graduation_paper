@@ -104,3 +104,46 @@ def test_duplicate_ids_are_rejected() -> None:
     records[1]["image_id"] = records[0]["image_id"]
     with pytest.raises(ValueError, match="Duplicate"):
         prepare_selector_data(records, FEATURE_SETS)
+
+
+def test_custom_semantic_utility_fields_are_supported() -> None:
+    records = _synthetic_records(20)
+    for record in records:
+        record["native_semantic"] = record[
+            "baseline_conflict_rejection_proxy"
+        ]
+        record["intervention_semantic"] = record[
+            "intervention_conflict_rejection_proxy"
+        ]
+    data = prepare_selector_data(
+        records,
+        FEATURE_SETS,
+        native_utility_field="native_semantic",
+        intervention_utility_field="intervention_semantic",
+    )
+    assert data.target.sum() == 5
+
+
+def test_custom_utility_output_names_are_supported() -> None:
+    data = prepare_selector_data(_synthetic_records(20), FEATURE_SETS)
+    summary, predictions = run_go_no_go(
+        data,
+        FEATURE_SETS,
+        outer_folds=2,
+        repeats=2,
+        inner_folds=2,
+        c_grid=[1.0],
+        bootstrap_resamples=20,
+        seed=7,
+        primary_feature_set="contribution_plus_reliability",
+        comparator_feature_set="contribution_only",
+        minimum_mean_auroc_gain=0.0,
+        minimum_mean_policy_gain_over_always_intervention=0.0,
+        minimum_repeat_auroc_win_fraction=0.0,
+        native_utility_output_name="native_semantic_utility",
+        intervention_utility_output_name="intervention_semantic_utility",
+    )
+    assert summary["sample"]["count"] == 20
+    assert "native_semantic_utility" in predictions[0]
+    assert "intervention_semantic_utility" in predictions[0]
+    assert "native_rule_proxy_utility" not in predictions[0]
