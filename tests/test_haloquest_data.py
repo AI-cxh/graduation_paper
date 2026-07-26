@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from haloquest_data import (  # noqa: E402
+    select_control_eval,
     select_false_premise_eval,
     summarize_haloquest_manifest,
 )
@@ -52,20 +53,40 @@ def test_duplicate_question_id_is_rejected() -> None:
         select_false_premise_eval([_row(1), _row(1)])
 
 
+def test_control_selection_keeps_two_non_false_premise_categories() -> None:
+    selected = select_control_eval(
+        [
+            _row(1, "visual challenge"),
+            _row(2, "insufficient context"),
+            _row(3, "false premises"),
+        ]
+    )
+    assert [record["haloquest_id"] for record in selected] == [1, 2]
+    assert {
+        record["hallucination_type"] for record in selected
+    } == {"visual challenge", "insufficient context"}
+
+
 def test_manifest_summary_reports_coverage_and_failures() -> None:
     summary = summarize_haloquest_manifest(
         [
             {
                 "haloquest_id": 1,
                 "image_type": "generated",
+                "hallucination_type": "visual challenge",
                 "download_status": "available",
             },
             {
                 "haloquest_id": 2,
                 "image_type": "real",
+                "hallucination_type": "insufficient context",
                 "download_status": "unavailable",
             },
         ]
     )
     assert summary["coverage"] == pytest.approx(0.5)
     assert summary["failed_ids"] == [2]
+    assert summary["hallucination_type_counts"] == {
+        "insufficient context": 1,
+        "visual challenge": 1,
+    }

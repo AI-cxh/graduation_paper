@@ -8,6 +8,8 @@
 
 当前已完成 Qwen2.5-VL-3B-Instruct 的 MMMC 50配对冒烟测试，以及 HaloQuest 287条 false-premise 样本的原生/前提核验两动作比较。规则代理指标不等同于语义准确率，Codex AI审核也不称作人工标注或官方 HaloQuest Auto-Eval。
 
+HaloQuest 非false-premise控制实验也已完成：299条控制问题、598次生成。重点AI审核同时发现固定核验的帮助与伤害，支持继续研究样本级干预效用，但仍需普通VQA能力保持对照。
+
 ## 目录
 
 - `src/`：可复用的推理、打分、诊断和评测代码；
@@ -89,6 +91,20 @@ CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
   scripts/run_exp005_haloquest_baseline.py --device cuda:0
 .conda/bin/python scripts/evaluate_exp005_haloquest.py
 .conda/bin/python scripts/summarize_exp005_ai_audit.py
+```
+
+准备、运行并评估 EXP-006 HaloQuest 控制实验：
+
+```bash
+.conda/bin/python scripts/prepare_haloquest_control_eval.py
+CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
+  scripts/run_exp005_haloquest_baseline.py \
+  --config configs/exp006_haloquest_control.yaml \
+  --manifest data/manifests/haloquest_control_eval.jsonl \
+  --output outputs/predictions/exp006/qwen2_5_vl_3b_native_vs_verification.jsonl \
+  --device cuda:0
+.conda/bin/python scripts/evaluate_exp006_haloquest_control.py
+.conda/bin/python scripts/summarize_exp006_control_ai_audit.py
 ```
 
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

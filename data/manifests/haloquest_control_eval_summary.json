@@ -1,0 +1,38 @@
+{
+  "protocol": "haloquest-official-non-false-premise-control-eval-v1",
+  "row_count": 304,
+  "available_count": 299,
+  "coverage": 0.9835526315789473,
+  "download_status_counts": {
+    "available": 299,
+    "unavailable": 5
+  },
+  "image_type_counts": {
+    "generated": 183,
+    "real": 121
+  },
+  "available_image_type_counts": {
+    "generated": 183,
+    "real": 116
+  },
+  "hallucination_type_counts": {
+    "insufficient context": 121,
+    "visual challenge": 183
+  },
+  "available_hallucination_type_counts": {
+    "insufficient context": 120,
+    "visual challenge": 179
+  },
+  "failed_ids": [
+    361,
+    392,
+    495,
+    523,
+    567
+  ],
+  "official_repository_commit": "2f643ebb77aeae40f4c5323db38f99f0dc257cf5",
+  "metadata_url": "https://raw.githubusercontent.com/google/haloquest/2f643ebb77aeae40f4c5323db38f99f0dc257cf5/haloquest-eval.csv",
+  "metadata_sha256": "6c88c8d6eb6d0a98881ec3e50ae52b5919247b53a47b7c723819603621b838b4",
+  "unique_image_count": 221,
+  "manifest_path": "data/manifests/haloquest_control_eval.jsonl"
+}

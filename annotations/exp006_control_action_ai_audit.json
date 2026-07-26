@@ -1,0 +1,41 @@
+{
+  "protocol": "exp006-control-action-ai-audit-v1",
+  "created_at": "2026-07-26",
+  "reviewer_type": "Codex AI semantic audit",
+  "human_annotation_claim": false,
+  "source": "outputs/metrics/exp006/qwen2_5_vl_3b_control_action_pairs.jsonl",
+  "scope_rule": "Review every visual-challenge pair with |lexical_delta| > 0.1 or a new target-linked rejection, plus every insufficient-context pair where native lexical score exceeds intervention by more than 0.1.",
+  "semantic_rule": "Compare both action responses with all official reference variants. Lexical shortening alone is a tie; an answer changes action utility only when semantic correctness changes.",
+  "effect_groups": {
+    "helps": [23, 296, 311, 424, 428, 478, 485, 532, 558, 562],
+    "harms": [81, 89, 156, 299, 337, 346, 544],
+    "tie": [
+      71, 84, 87, 93, 94, 96, 98, 100, 104, 109, 110, 237, 273, 278,
+      279, 282, 283, 288, 290, 291, 297, 313, 318, 321, 322, 325, 329,
+      339, 342, 344, 345, 349, 352, 365, 372, 378, 388, 395, 420, 429,
+      440, 442, 452, 477, 504, 520, 521, 522, 524, 525, 528, 529, 530,
+      531, 534, 535, 538, 540, 541, 546, 549, 550, 551, 552, 553, 556,
+      559, 560, 563, 564, 569, 570, 573, 578
+    ],
+    "uncertain": []
+  },
+  "remaining_pool_stratified_audit": {
+    "sampling_rule": "20 evenly spaced rows from the 208 pairs outside the primary audit scope after sorting by HaloQuest ID.",
+    "sample_ids": [
+      0, 92, 123, 181, 216, 280, 300, 312, 328, 343,
+      359, 376, 418, 470, 512, 545, 572, 585, 596, 607
+    ],
+    "helps_count": 5,
+    "harms_count": 0,
+    "tie_count": 15,
+    "uncertain_count": 0,
+    "note": "Several ties are jointly wrong; no sampled pair shows a clear intervention harm."
+  },
+  "limitations": [
+    "This is an AI semantic audit, not human annotation and not official HaloQuest Auto-Eval.",
+    "The primary scope is deliberately enriched for potential action changes and does not estimate population effect prevalence.",
+    "Only 20 of the 208 pairs outside the primary scope were reviewed.",
+    "The audit uses official textual references without re-inspecting every source image."
+  ]
+}
+

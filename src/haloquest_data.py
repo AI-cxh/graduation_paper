@@ -19,12 +19,17 @@ OFFICIAL_FIELDS = {
     "split",
 }
 FALSE_PREMISE_LABEL = "false premises"
+CONTROL_LABELS = {"visual challenge", "insufficient context"}
 
 
-def select_false_premise_eval(
+def select_haloquest_eval(
     rows: Iterable[Mapping[str, Any]],
+    hallucination_types: set[str],
 ) -> list[dict[str, Any]]:
-    """Select and normalize the official false-premise evaluation subset."""
+    """Select and normalize official eval rows for fixed category labels."""
+
+    if not hallucination_types:
+        raise ValueError("At least one HaloQuest category is required")
 
     normalized = []
     seen_ids: set[int] = set()
@@ -34,10 +39,8 @@ def select_false_premise_eval(
             raise ValueError(f"Missing HaloQuest fields: {sorted(missing)}")
         if str(source["split"]).strip() != "eval":
             continue
-        if (
-            str(source["hallucination type"]).strip()
-            != FALSE_PREMISE_LABEL
-        ):
+        hallucination_type = str(source["hallucination type"]).strip()
+        if hallucination_type not in hallucination_types:
             continue
         haloquest_id = int(str(source[""]).strip())
         image_name = str(source["image_name"]).strip()
@@ -55,7 +58,7 @@ def select_false_premise_eval(
                 "image_name": image_name,
                 "source_url": url,
                 "image_type": str(source["image type"]).strip(),
-                "hallucination_type": FALSE_PREMISE_LABEL,
+                "hallucination_type": hallucination_type,
                 "question": question,
                 "groundtruth_response": answer,
                 "split": "eval",
@@ -64,8 +67,26 @@ def select_false_premise_eval(
     return sorted(normalized, key=lambda record: record["haloquest_id"])
 
 
+def select_false_premise_eval(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Select the official false-premise evaluation subset."""
+
+    return select_haloquest_eval(rows, {FALSE_PREMISE_LABEL})
+
+
+def select_control_eval(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Select visual-challenge and insufficient-context control rows."""
+
+    return select_haloquest_eval(rows, CONTROL_LABELS)
+
+
 def summarize_haloquest_manifest(
     records: Iterable[Mapping[str, Any]],
+    *,
+    protocol: str = "haloquest-official-false-premise-eval-v1",
 ) -> dict[str, Any]:
     """Summarize local image coverage without treating failures as examples."""
 
@@ -76,7 +97,7 @@ def summarize_haloquest_manifest(
     ]
     image_types = Counter(str(record["image_type"]) for record in records)
     return {
-        "protocol": "haloquest-official-false-premise-eval-v1",
+        "protocol": protocol,
         "row_count": len(records),
         "available_count": len(available),
         "coverage": len(available) / len(records) if records else 0.0,
@@ -84,6 +105,18 @@ def summarize_haloquest_manifest(
         "image_type_counts": dict(sorted(image_types.items())),
         "available_image_type_counts": dict(
             sorted(Counter(str(record["image_type"]) for record in available).items())
+        ),
+        "hallucination_type_counts": dict(
+            sorted(
+                Counter(str(record["hallucination_type"]) for record in records).items()
+            )
+        ),
+        "available_hallucination_type_counts": dict(
+            sorted(
+                Counter(
+                    str(record["hallucination_type"]) for record in available
+                ).items()
+            )
         ),
         "failed_ids": [
             int(record["haloquest_id"])
