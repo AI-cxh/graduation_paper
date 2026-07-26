@@ -4,13 +4,15 @@
 
 ## 当前阶段
 
-已完成首轮 Go/No-Go、公开数据复核、EXP-007 无参考特征诊断和 EXP-008 分组选择器验证。当前结论是：课题问题可做，原生回答的反事实视觉贡献对干预帮助有稳定排序信号；但现有轻度扰动可靠性没有带来稳定增量，联合选择策略也没有超过始终干预，EXP-008 按预注册条件为 `No-Go`。下一阶段优先补充普通可回答VQA对照并重新定义可靠性，不在同一批审核样本上继续调参。
+已完成首轮 Go/No-Go、公开数据复核、EXP-007 无参考特征诊断、EXP-008 分组选择器验证和 EXP-009 普通 VQAv2 独立对照。当前结论是：课题问题可做，原生回答的反事实视觉贡献不仅在两类 HaloQuest 样本中具有排序信号，从 HaloQuest 冻结训练的仅贡献选择器也在300条 VQAv2 正常问题上取得初步正向迁移；但现有轻度扰动可靠性仍没有形成稳定联合增量，不能作为既成贡献。
 
 当前已完成 Qwen2.5-VL-3B-Instruct 的 MMMC 50配对冒烟测试，以及 HaloQuest 287条 false-premise 样本的原生/前提核验两动作比较。规则代理指标不等同于语义准确率，Codex AI审核也不称作人工标注或官方 HaloQuest Auto-Eval。
 
 HaloQuest 非false-premise控制实验也已完成：299条控制问题、598次生成。重点AI审核同时发现固定核验的帮助与伤害，支持继续研究样本级干预效用，但仍需普通VQA能力保持对照。
 
 EXP-007 在两类审核样本各91条上完成了728次无参考候选打分。特征只使用原生回答、问题和图像，不读取官方参考答案；因此它对应“先生成一次，再决定是否执行核验式二次回答”的选择性干预，而不是零次生成前路由。
+
+EXP-009 从 VQAv2 val2014 确定性抽取300条高共识、互异图像问题（yes/no、number、other各100条），完成600次双动作生成和1200次无参考候选评分。固定前提核验的归一化 VQA 软准确率为0.8570，原生回答为0.8557，差值区间跨0；冻结的仅贡献选择器只干预25条，策略分数为0.8650，相对原生提高0.0093，但帮助/伤害各仅7条，仍需扩大验证。
 
 ## 目录
 
@@ -120,6 +122,18 @@ CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
 
 ```bash
 .conda/bin/python scripts/run_exp008_grouped_selector.py
+```
+
+准备、运行并评估 EXP-009 普通 VQAv2 能力保持对照：
+
+```bash
+.conda/bin/python scripts/prepare_exp009_vqav2_control.py
+CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
+  scripts/run_exp009_vqav2_baseline.py --device cuda:0
+.conda/bin/python scripts/evaluate_exp009_vqav2.py
+CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
+  scripts/run_exp009_native_answer_features.py --device cuda:0
+.conda/bin/python scripts/evaluate_exp009_frozen_selector.py
 ```
 
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

@@ -1,0 +1,142 @@
+experiment:
+  id: "EXP-009"
+  name: "VQAv2 answerable capability-preservation control"
+  seed: 20260726
+
+dataset:
+  name: "VQAv2"
+  split: "val2014"
+  official_page: "https://visualqa.org/download.html"
+  annotations_url: >-
+    https://cvmlp.s3.amazonaws.com/vqa/mscoco/vqa/v2_Annotations_Val_mscoco.zip
+  questions_url: >-
+    https://cvmlp.s3.amazonaws.com/vqa/mscoco/vqa/v2_Questions_Val_mscoco.zip
+  annotations_zip_sha256: >-
+    0caae7c8d1dafd852727f5ac046bc1efca9b72026bd6ffa34fc489f3a7b3291e
+  questions_zip_sha256: >-
+    e71f6c5c3e97a51d050f28243e262b28cd0c48d11a6b4632d769d30d3f93222a
+  annotations_json_sha256: >-
+    0564650e712b34c246e4ad142894692bf2e45dee8e9cc6ebb2cedbe85731c4bf
+  questions_json_sha256: >-
+    f34d9c9909dea76700d361baddd63dd47b4494945097459b542d9fe840244811
+  official_eval_repository: "https://github.com/GT-Vision-Lab/VQA.git"
+  official_eval_revision: "a013f0043c1e2cdc995922dfe257f7149aa9af06"
+  expected_official_question_count: 214354
+  image_transport_note: >-
+    Use the official COCO S3 HTTP endpoint because the current network proxy
+    presents a hostname-mismatched certificate for the HTTPS image endpoint.
+
+sample:
+  protocol: "exp009-vqav2-balanced-consensus-control-v1"
+  quotas:
+    yes/no: 100
+    number: 100
+    other: 100
+  require_unique_image: true
+  minimum_exact_consensus_count: 6
+  selection: >-
+    Deterministic SHA-256 ordering by seed and question ID, round-robin across
+    answer types, without inspecting model outputs.
+  semantic_accuracy_claim: true
+
+paths:
+  annotations: >-
+    data/raw/vqav2/source/v2_mscoco_val2014_annotations.json
+  questions: >-
+    data/raw/vqav2/source/v2_OpenEnded_mscoco_val2014_questions.json
+  image_directory: "data/raw/vqav2/images/val2014"
+  manifest: "data/manifests/vqav2_answerable_control.jsonl"
+  manifest_summary: "data/manifests/vqav2_answerable_control_summary.json"
+
+model:
+  repository: "Qwen/Qwen2.5-VL-3B-Instruct"
+  revision: "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  dtype: "bfloat16"
+  attention: "sdpa"
+
+vision:
+  min_pixels: 200704
+  max_pixels: 802816
+  processor_use_fast: false
+
+inference:
+  actions:
+    - "native_prompt"
+    - "premise_verification"
+  common_output_instruction: >-
+    Respond with only a short answer or short phrase.
+  tokenizer_padding_side: "left"
+  batch_size: 1
+  do_sample: false
+  max_new_tokens: 32
+  device: "cuda:3"
+
+evaluation:
+  protocol: "dual-vqav2-soft-accuracy-v1"
+  official_metric: >-
+    Exact Python 3 port of the pinned official evaluator, including its
+    conditional normalization behavior.
+  action_effect_metric: >-
+    VQAv2 soft accuracy with unconditional official answer normalization, used
+    to prevent unanimous-reference capitalization artifacts from becoming
+    false intervention effects.
+  score_scale: "[0, 1]"
+  bootstrap_resamples: 5000
+  effect_epsilon: 1.0e-12
+
+native_answer_features:
+  protocol: "exp007-native-answer-support-stability-v1"
+  score_conditions:
+    - "multimodal_identity"
+    - "text_only"
+    - "multimodal_jpeg_q75"
+    - "multimodal_gaussian_blur_r1"
+  reference_answer_used_as_feature: false
+
+frozen_selector:
+  training_features: >-
+    outputs/metrics/exp007/qwen2_5_vl_3b_native_answer_features.jsonl
+  training_expected_count: 182
+  training_scope: "pooled"
+  target: "action_effect == helps"
+  utility:
+    helps: 1.0
+    harms: -1.0
+    tie: 0.0
+  feature_sets:
+    contribution_only:
+      - "identity_visual_delta"
+    reliability_only:
+      - "population_std_visual_delta"
+      - "worst_drop_from_identity"
+    contribution_plus_reliability:
+      - "identity_visual_delta"
+      - "population_std_visual_delta"
+      - "worst_drop_from_identity"
+  group_field: "image_sha256"
+  inner_folds: 5
+  repeated_oof_threshold_repeats: 20
+  logistic_c: 1.0
+  class_weight: "balanced"
+  threshold_objective: "EXP-008 training OOF policy utility"
+  vqav2_labels_used_for_fit_or_threshold: false
+
+outputs:
+  predictions: >-
+    outputs/predictions/exp009/qwen2_5_vl_3b_native_vs_verification.jsonl
+  evaluated_records: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_vqav2_evaluated_records.jsonl
+  paired_results: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_vqav2_paired_results.jsonl
+  summary: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_vqav2_summary.json
+  native_answer_scores: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_native_answer_scores.jsonl
+  native_answer_features: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_native_answer_features.jsonl
+  native_answer_feature_summary: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_native_answer_feature_summary.json
+  frozen_selector_predictions: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_frozen_selector_predictions.jsonl
+  frozen_selector_summary: >-
+    outputs/metrics/exp009/qwen2_5_vl_3b_frozen_selector_summary.json

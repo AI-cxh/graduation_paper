@@ -1,0 +1,39 @@
+{
+  "protocol": "exp009-vqav2-balanced-consensus-control-v1",
+  "source": {
+    "name": "VQAv2",
+    "split": "val2014",
+    "official_page": "https://visualqa.org/download.html",
+    "annotations_url": "https://cvmlp.s3.amazonaws.com/vqa/mscoco/vqa/v2_Annotations_Val_mscoco.zip",
+    "questions_url": "https://cvmlp.s3.amazonaws.com/vqa/mscoco/vqa/v2_Questions_Val_mscoco.zip",
+    "annotations_zip_sha256": "0caae7c8d1dafd852727f5ac046bc1efca9b72026bd6ffa34fc489f3a7b3291e",
+    "questions_zip_sha256": "e71f6c5c3e97a51d050f28243e262b28cd0c48d11a6b4632d769d30d3f93222a",
+    "annotations_json_sha256": "0564650e712b34c246e4ad142894692bf2e45dee8e9cc6ebb2cedbe85731c4bf",
+    "questions_json_sha256": "f34d9c9909dea76700d361baddd63dd47b4494945097459b542d9fe840244811",
+    "official_eval_repository": "https://github.com/GT-Vision-Lab/VQA.git",
+    "official_eval_revision": "a013f0043c1e2cdc995922dfe257f7149aa9af06",
+    "expected_official_question_count": 214354,
+    "image_transport_note": "Use the official COCO S3 HTTP endpoint because the current network proxy presents a hostname-mismatched certificate for the HTTPS image endpoint."
+  },
+  "selection": {
+    "protocol": "exp009-vqav2-balanced-consensus-control-v1",
+    "quotas": {
+      "yes/no": 100,
+      "number": 100,
+      "other": 100
+    },
+    "require_unique_image": true,
+    "minimum_exact_consensus_count": 6,
+    "selection": "Deterministic SHA-256 ordering by seed and question ID, round-robin across answer types, without inspecting model outputs.",
+    "semantic_accuracy_claim": true
+  },
+  "selected_count": 300,
+  "available_count": 300,
+  "failed_count": 0,
+  "answer_type_counts": {
+    "number": 100,
+    "other": 100,
+    "yes/no": 100
+  },
+  "unique_image_count": 300
+}

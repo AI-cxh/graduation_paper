@@ -39,6 +39,19 @@ class EvaluationArrays:
     selections: BoolArray
 
 
+@dataclass(frozen=True)
+class FrozenSelector:
+    """A full-data selector whose threshold uses repeated grouped OOF data."""
+
+    scaler: StandardScaler
+    model: LogisticRegression
+    threshold: float
+    mean_training_oof_probability: FloatArray
+
+    def predict_probability(self, features: FloatArray) -> FloatArray:
+        return self.model.predict_proba(self.scaler.transform(features))[:, 1]
+
+
 def prepare_haloquest_selector_data(
     records: Sequence[Mapping[str, Any]],
     feature_sets: Mapping[str, Sequence[str]],
@@ -197,6 +210,45 @@ def _grouped_oof_probabilities(
             scaler.transform(features[test_indices])
         )[:, 1]
     return probabilities
+
+
+def fit_frozen_grouped_selector(
+    features: FloatArray,
+    target: BoolArray,
+    intervention_utility: FloatArray,
+    groups: NDArray[np.str_],
+    *,
+    folds: int,
+    repeats: int,
+    c_value: float,
+    seed: int,
+) -> FrozenSelector:
+    """Fit a selector without using any external-test labels or thresholds."""
+
+    repeated_oof = np.asarray(
+        [
+            _grouped_oof_probabilities(
+                features,
+                target,
+                groups,
+                folds=folds,
+                c_value=c_value,
+                seed=seed + repeat * 1000,
+            )
+            for repeat in range(repeats)
+        ]
+    )
+    mean_oof = repeated_oof.mean(axis=0)
+    threshold = choose_policy_threshold(mean_oof, intervention_utility)
+    scaler = StandardScaler().fit(features)
+    model = _classifier(c_value, seed)
+    model.fit(scaler.transform(features), target)
+    return FrozenSelector(
+        scaler=scaler,
+        model=model,
+        threshold=threshold,
+        mean_training_oof_probability=mean_oof,
+    )
 
 
 def _metric_distribution(values: Sequence[float]) -> dict[str, float]:

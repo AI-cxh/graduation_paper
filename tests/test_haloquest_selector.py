@@ -12,6 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from haloquest_selector import (  # noqa: E402
     choose_policy_threshold,
+    fit_frozen_grouped_selector,
     prepare_haloquest_selector_data,
     run_exp008,
 )
@@ -78,6 +79,29 @@ def test_prepare_rejects_duplicate_ids() -> None:
             FEATURE_SETS,
             {"helps": 1.0, "harms": -1.0, "tie": 0.0},
         )
+
+
+def test_fit_frozen_selector_uses_grouped_oof_threshold() -> None:
+    data = prepare_haloquest_selector_data(
+        _records(),
+        FEATURE_SETS,
+        {"helps": 1.0, "harms": -1.0, "tie": 0.0},
+    )
+    frozen = fit_frozen_grouped_selector(
+        data.features["contribution_only"],
+        data.target,
+        data.intervention_utility,
+        data.groups,
+        folds=3,
+        repeats=2,
+        c_value=1.0,
+        seed=7,
+    )
+    probabilities = frozen.predict_probability(
+        data.features["contribution_only"]
+    )
+    assert probabilities.shape == (60,)
+    assert 0 <= frozen.threshold <= 1
 
 
 def test_run_exp008_groups_images_and_removes_transfer_overlap() -> None:
