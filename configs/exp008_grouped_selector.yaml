@@ -1,0 +1,82 @@
+experiment:
+  id: "EXP-008"
+  name: "Grouped native-answer intervention-utility selector"
+  seed: 20260726
+
+input:
+  features: >-
+    outputs/metrics/exp007/qwen2_5_vl_3b_native_answer_features.jsonl
+  expected_sample_count: 182
+  expected_effect_counts:
+    helps: 72
+    harms: 11
+    tie: 99
+  expected_scope_counts:
+    false_premise: 91
+    control: 91
+  reference_answer_used_as_feature: false
+
+target:
+  name: "verification_intervention_helps"
+  positive_effect: "helps"
+  policy_utility:
+    helps: 1.0
+    harms: -1.0
+    tie: 0.0
+  interpretation: >-
+    Predict whether a premise-verification second answer improves the frozen
+    first answer. Utility is a directional diagnostic, not semantic accuracy.
+
+feature_sets:
+  contribution_only:
+    - "identity_visual_delta"
+  reliability_only:
+    - "population_std_visual_delta"
+    - "worst_drop_from_identity"
+  contribution_plus_reliability:
+    - "identity_visual_delta"
+    - "population_std_visual_delta"
+    - "worst_drop_from_identity"
+
+validation:
+  protocol: "exp008-repeated-stratified-grouped-cv-v1"
+  scopes:
+    - "pooled"
+    - "false_premise"
+    - "control"
+  group_field: "image_sha256"
+  outer_folds: 5
+  repeats: 20
+  inner_folds: 3
+  logistic_c: 1.0
+  class_weight: "balanced"
+  threshold_objective: "inner grouped out-of-fold policy utility"
+  bootstrap_resamples: 5000
+
+cross_scope_transfer:
+  enabled: true
+  directions:
+    - train: "false_premise"
+      test: "control"
+    - train: "control"
+      test: "false_premise"
+  leakage_control: >-
+    Remove from the source training scope every image hash appearing in the
+    full target scope; retain the complete target scope for evaluation.
+
+go_no_go:
+  evaluation_scope: "pooled"
+  primary_feature_set: "contribution_plus_reliability"
+  comparator_feature_set: "contribution_only"
+  minimum_mean_auroc_gain: 0.02
+  minimum_mean_policy_gain_over_always_intervention: 0.0
+  minimum_repeat_auroc_win_fraction: 0.60
+  interpretation: >-
+    Conditional Go requires reliability to add stable value over contribution
+    and the grouped-CV policy to beat always intervening. Cross-scope transfer
+    is reported separately and cannot be used to retune this verdict.
+
+outputs:
+  summary: "outputs/metrics/exp008/qwen2_5_vl_3b_grouped_selector_summary.json"
+  predictions: >-
+    outputs/metrics/exp008/qwen2_5_vl_3b_grouped_selector_predictions.jsonl

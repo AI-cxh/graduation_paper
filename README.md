@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-已完成首轮 Go/No-Go、公开数据复核和 EXP-007 无参考特征诊断。当前结论是：课题问题可做，原生回答的反事实视觉贡献能在冲突与控制审核子集中稳定区分“干预帮助”，但轻度扰动可靠性的增量价值尚不稳定，现有轻量选择器仍未证明能够超过固定干预。下一阶段将按图像分组、冻结协议运行轻量选择器和跨子集验证。
+已完成首轮 Go/No-Go、公开数据复核、EXP-007 无参考特征诊断和 EXP-008 分组选择器验证。当前结论是：课题问题可做，原生回答的反事实视觉贡献对干预帮助有稳定排序信号；但现有轻度扰动可靠性没有带来稳定增量，联合选择策略也没有超过始终干预，EXP-008 按预注册条件为 `No-Go`。下一阶段优先补充普通可回答VQA对照并重新定义可靠性，不在同一批审核样本上继续调参。
 
 当前已完成 Qwen2.5-VL-3B-Instruct 的 MMMC 50配对冒烟测试，以及 HaloQuest 287条 false-premise 样本的原生/前提核验两动作比较。规则代理指标不等同于语义准确率，Codex AI审核也不称作人工标注或官方 HaloQuest Auto-Eval。
 
@@ -114,6 +114,12 @@ CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
 ```bash
 CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
   scripts/run_exp007_native_answer_features.py --device cuda:0
+```
+
+运行 EXP-008 按图像分组的轻量选择器与双向跨子集验证：
+
+```bash
+.conda/bin/python scripts/run_exp008_grouped_selector.py
 ```
 
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。
