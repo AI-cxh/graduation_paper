@@ -4,11 +4,13 @@
 
 ## 当前阶段
 
-已完成首轮 Go/No-Go 和公开数据复核。当前结论是：课题问题可做，但现有轻量选择器尚不能超过固定干预。下一阶段扩大公开的冲突—正常动作效用数据，并重新验证贡献、可靠性与干预净收益的关系。
+已完成首轮 Go/No-Go、公开数据复核和 EXP-007 无参考特征诊断。当前结论是：课题问题可做，原生回答的反事实视觉贡献能在冲突与控制审核子集中稳定区分“干预帮助”，但轻度扰动可靠性的增量价值尚不稳定，现有轻量选择器仍未证明能够超过固定干预。下一阶段将按图像分组、冻结协议运行轻量选择器和跨子集验证。
 
 当前已完成 Qwen2.5-VL-3B-Instruct 的 MMMC 50配对冒烟测试，以及 HaloQuest 287条 false-premise 样本的原生/前提核验两动作比较。规则代理指标不等同于语义准确率，Codex AI审核也不称作人工标注或官方 HaloQuest Auto-Eval。
 
 HaloQuest 非false-premise控制实验也已完成：299条控制问题、598次生成。重点AI审核同时发现固定核验的帮助与伤害，支持继续研究样本级干预效用，但仍需普通VQA能力保持对照。
+
+EXP-007 在两类审核样本各91条上完成了728次无参考候选打分。特征只使用原生回答、问题和图像，不读取官方参考答案；因此它对应“先生成一次，再决定是否执行核验式二次回答”的选择性干预，而不是零次生成前路由。
 
 ## 目录
 
@@ -105,6 +107,13 @@ CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
   --device cuda:0
 .conda/bin/python scripts/evaluate_exp006_haloquest_control.py
 .conda/bin/python scripts/summarize_exp006_control_ai_audit.py
+```
+
+提取 EXP-007 原生回答贡献与扰动可靠性特征（支持断点续跑）：
+
+```bash
+CUDA_VISIBLE_DEVICES=3 .conda/bin/python \
+  scripts/run_exp007_native_answer_features.py --device cuda:0
 ```
 
 人工复核规范见 [`annotations/EXP-001_答案语义复核说明.md`](./annotations/EXP-001_答案语义复核说明.md)。

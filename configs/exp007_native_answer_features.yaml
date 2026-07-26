@@ -1,0 +1,72 @@
+experiment:
+  id: "EXP-007"
+  name: "Native-answer visual contribution and perturbation reliability"
+  seed: 20260726
+
+sample:
+  protocol: "exp007-decisive-ai-audit-scope-v1"
+  sources:
+    - scope: "false_premise"
+      manifest: "data/manifests/haloquest_false_premise_eval.jsonl"
+      predictions: >-
+        outputs/predictions/exp005/qwen2_5_vl_3b_native_vs_verification.jsonl
+      audit: "annotations/exp005_action_effect_ai_audit.json"
+    - scope: "control"
+      manifest: "data/manifests/haloquest_control_eval.jsonl"
+      predictions: >-
+        outputs/predictions/exp006/qwen2_5_vl_3b_native_vs_verification.jsonl
+      audit: "annotations/exp006_control_action_ai_audit.json"
+  accepted_effects:
+    - "helps"
+    - "harms"
+    - "tie"
+  excluded_effects:
+    - "uncertain"
+  expected_count_by_scope:
+    false_premise: 91
+    control: 91
+  selection_bias_note: >-
+    Both source audits enrich action-changing samples. EXP-007 is an
+    exploratory feature diagnostic and does not estimate population prevalence.
+
+candidate:
+  source: "native_prompt generated_text"
+  reference_answer_used_as_feature: false
+  availability: "after first native generation, before optional re-answer"
+
+score_conditions:
+  - "multimodal_identity"
+  - "text_only"
+  - "multimodal_jpeg_q75"
+  - "multimodal_gaussian_blur_r1"
+
+model:
+  repository: "Qwen/Qwen2.5-VL-3B-Instruct"
+  revision: "66285546d2b821cf421d4f5eb2576359d3770cd3"
+  dtype: "bfloat16"
+  attention: "sdpa"
+  device: "cuda:3"
+
+vision:
+  min_pixels: 200704
+  max_pixels: 802816
+  processor_use_fast: false
+
+inference:
+  tokenizer_padding_side: "left"
+  batch_size: 1
+
+analysis:
+  protocol: "exp007-univariate-effect-diagnostic-v1"
+  bootstrap_resamples: 2000
+  labels:
+    - "helps"
+    - "harms"
+    - "tie"
+  no_selector_training: true
+  no_reference_answer_features: true
+
+outputs:
+  scores: "outputs/metrics/exp007/qwen2_5_vl_3b_native_answer_scores.jsonl"
+  features: "outputs/metrics/exp007/qwen2_5_vl_3b_native_answer_features.jsonl"
+  summary: "outputs/metrics/exp007/qwen2_5_vl_3b_native_answer_feature_summary.json"
